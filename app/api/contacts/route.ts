@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { readContacts, updateContactStatus } from '@/lib/csv';
+import { readContacts, updateContactStatus, updateContact } from '@/lib/csv';
 
 export async function GET(req: NextRequest) {
     try {
@@ -19,8 +19,14 @@ export async function GET(req: NextRequest) {
 
 export async function PATCH(req: NextRequest) {
     try {
-        const { id, status } = await req.json();
-        updateContactStatus(id, status);
+        const { id, status, field, value } = await req.json();
+        
+        if (field && value !== undefined) {
+            updateContact(id, field, value);
+        } else if (status) {
+            updateContactStatus(id, status);
+        }
+        
         return NextResponse.json({ success: true });
     } catch (error: any) {
         return NextResponse.json({ error: error.message }, { status: 500 });

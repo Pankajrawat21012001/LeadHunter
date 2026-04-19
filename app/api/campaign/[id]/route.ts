@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { readCampaigns, readContacts } from '@/lib/csv';
 
-export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
     try {
-        const id = params.id;
+        const { id } = await params;
         const campaigns = readCampaigns();
         const campaign = campaigns.find(c => c.id === id);
         if (!campaign) {

@@ -29,6 +29,8 @@ export interface Campaign {
   status: "running" | "completed" | "failed";
   createdAt: string;
   completedAt?: string;
+  deduplicatedCount: number;
+  runTimeSeconds: number;
 }
 
 export interface SearchRequest {
@@ -42,4 +44,5 @@ export interface SearchRequest {
   };
   targetCount: number;
   senderContext?: string;
+  previousQuery?: string;
 }

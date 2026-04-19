@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import CampaignActions from "./CampaignActions";
 
 export default async function CampaignPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -48,20 +49,11 @@ export default async function CampaignPage({ params }: { params: Promise<{ id: s
             </div>
           </div>
 
-          <div className="flex gap-4">
-            <Link href={`/api/export?campaignId=${campaign.id}`}>
-              <Button variant="outline" className="h-12 px-6 rounded-xl bg-surface border-white/5 gap-2 hover:bg-white/5">
-                <Download className="w-5 h-5" />
-                Export CSV
-              </Button>
-            </Link>
-            <Link href={`/?q=${encodeURIComponent(campaign.targetDescription)}&useCase=${campaign.useCase}`}>
-              <Button className="h-12 px-6 rounded-xl gap-2 accent-glow">
-                <RefreshCcw className="w-5 h-5" />
-                Find More
-              </Button>
-            </Link>
-          </div>
+          <CampaignActions 
+            campaignId={campaign.id} 
+            targetDescription={campaign.targetDescription} 
+            useCase={campaign.useCase} 
+          />
         </div>
       </div>
 
@@ -79,12 +71,12 @@ export default async function CampaignPage({ params }: { params: Promise<{ id: s
          />
          <StatsCard 
             label="Deduplicated" 
-            value="Automatic" 
+            value={(campaign.deduplicatedCount || 0).toString()} 
             icon={<LinkedinIcon className="w-5 h-5 text-primary" />} 
          />
          <StatsCard 
             label="Run Time" 
-            value="~2m" 
+            value={`${campaign.runTimeSeconds || 0}s`} 
             icon={<Calendar className="w-5 h-5 text-muted-foreground" />} 
          />
       </div>

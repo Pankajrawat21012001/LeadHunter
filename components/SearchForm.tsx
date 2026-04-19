@@ -58,7 +58,7 @@ export default function SearchForm({ existingCount }: { existingCount: number })
   const searchParams = useSearchParams();
   const [isSearching, setIsSearching] = useState(false);
   const [currentStep, setCurrentStep] = useState<number | null>(null);
-  const [stepStates, setStepStates] = useState<Record<number, { status: string; message: string }>>({});
+  const [stepStates, setStepStates] = useState<Record<number, { status: string; message: string; data?: any }>>({});
   const [progress, setProgress] = useState(0);
 
   const form = useForm<SearchFormValues>({
@@ -92,7 +92,10 @@ export default function SearchForm({ existingCount }: { existingCount: number })
     try {
       const response = await fetch('/api/search', {
         method: 'POST',
-        body: JSON.stringify(values),
+        body: JSON.stringify({
+          ...values,
+          previousQuery: searchParams.get('prev') || undefined
+        }),
         headers: { 'Content-Type': 'application/json' }
       });
 
@@ -118,7 +121,11 @@ export default function SearchForm({ existingCount }: { existingCount: number })
               setCurrentStep(event.step);
               setStepStates(prev => ({
                 ...prev,
-                [event.step]: { status: event.status, message: event.message }
+                [event.step]: { 
+                    status: event.status, 
+                    message: event.message,
+                    data: event.data 
+                }
               }));
 
               if (event.step > 0) {
@@ -216,6 +223,23 @@ export default function SearchForm({ existingCount }: { existingCount: number })
                 </div>
               </div>
 
+              {/* Sender Context (New) */}
+              <div className="space-y-4">
+                <label className="text-sm font-bold uppercase tracking-widest text-muted-foreground block text-center">
+                  About You (Optional)
+                </label>
+                <div className="relative group max-w-2xl mx-auto">
+                    <textarea
+                    {...form.register("senderContext")}
+                    placeholder='e.g. "I am a product designer with 5 years at B2B SaaS startups"'
+                    className="w-full h-32 bg-surface border border-white/5 rounded-2xl p-6 text-sm resize-none focus:ring-1 ring-primary focus:border-primary transition-all shadow-xl font-sans"
+                    />
+                    <p className="text-[10px] uppercase font-bold text-muted-foreground mt-3 tracking-widest text-center opacity-60">
+                        This detail helps Groq write hyper-personalized messages.
+                    </p>
+                </div>
+              </div>
+
               {/* Checkboxes & Count */}
               <div className="grid grid-cols-2 gap-12">
                 <div className="space-y-6">
@@ -303,6 +327,13 @@ export default function SearchForm({ existingCount }: { existingCount: number })
                         <p className={`font-bold transition-colors ${currentStep === step.id ? 'text-white' : 'text-muted-foreground'}`}>
                           {step.label}
                         </p>
+                        {step.id === 2 && currentStep === 2 && state?.data?.count && (
+                          <span className="ml-auto font-mono text-[10px] bg-primary/20 text-primary px-2 py-0.5 rounded-full animate-pulse border border-primary/20">
+                            {state.data.count} found
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex-1">
                         {state && state.message && (
                           <p className="text-xs text-muted-foreground mt-0.5 animate-in slide-in-from-left-2 fade-in">{state.message}</p>
                         )}

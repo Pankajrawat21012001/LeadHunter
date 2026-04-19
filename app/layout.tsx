@@ -22,9 +22,11 @@ const jetbrainsMono = JetBrains_Mono({
   variable: "--font-jetbrains-mono",
 });
 
+import SidebarItem from "@/components/SidebarItem";
+
 export const metadata: Metadata = {
-  title: "leadhunter V2 | AI-Powered Outreach",
-  description: "Find and connect with your target audience using AI.",
+  title: "LeadHunter | AI Outreach",
+  description: "Find and connect with your target audience using AI gravity.",
 };
 
 export default function RootLayout({
@@ -41,24 +43,27 @@ export default function RootLayout({
         <aside className="w-64 border-r border-border/50 bg-surface flex flex-col fixed h-full z-50">
           <div className="p-6">
             <Link href="/" className="flex items-center gap-2 group">
-              <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center accent-glow">
+              <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center accent-glow shadow-primary/20 shadow-lg">
                 <Zap className="w-5 h-5 text-white fill-white" />
               </div>
-              <span className="font-heading text-xl tracking-tight uppercase">leadhunter</span>
+              <span className="font-heading text-xl tracking-tighter uppercase font-extrabold group-hover:tracking-normal transition-all duration-300">LeadHunter</span>
             </Link>
           </div>
 
           <nav className="flex-1 px-4 py-4 space-y-2">
-            <SidebarItem href="/" icon={<LayoutDashboard className="w-5 h-5" />} label="New Search" />
-            <SidebarItem href="/history" icon={<History className="w-5 h-5" />} label="History" />
-            <SidebarItem href="/contacts" icon={<Users className="w-5 h-5" />} label="All Contacts" />
+            <SidebarItem href="/" icon={<LayoutDashboard className="w-4 h-4" />} label="New Search" />
+            <SidebarItem href="/history" icon={<History className="w-4 h-4" />} label="History" />
+            <SidebarItem href="/contacts" icon={<Users className="w-4 h-4" />} label="All Contacts" />
           </nav>
 
-          <div className="p-4 border-t border-border/50">
-            <SidebarItem href="/settings" icon={<Settings className="w-5 h-5" />} label="Settings" />
-            <div className="mt-4 p-4 rounded-xl bg-secondary/50 border border-border/10">
-              <p className="text-xs text-muted-foreground uppercase tracking-widest font-bold">Credits</p>
-              <p className="text-sm font-mono mt-1">Unlimited</p>
+          <div className="p-4 border-t border-border/10">
+            <SidebarItem href="/settings" icon={<Settings className="w-4 h-4" />} label="Settings" />
+            <div className="mt-4 p-5 rounded-3xl bg-secondary/30 border border-white/5 shadow-inner">
+              <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold mb-3 opacity-60">System Credits</p>
+              <div className="flex items-end justify-between">
+                <p className="text-xl font-heading text-white tracking-widest leading-none">∞<span className="text-[10px] ml-1 uppercase opacity-30">Remaining</span></p>
+                <Zap className="w-4 h-4 text-primary fill-primary opacity-20 animate-pulse" />
+              </div>
             </div>
           </div>
         </aside>
@@ -73,17 +78,5 @@ export default function RootLayout({
         <Toaster theme="dark" position="top-right" richColors />
       </body>
     </html>
-  );
-}
-
-function SidebarItem({ href, icon, label }: { href: string; icon: React.ReactNode; label: string }) {
-  return (
-    <Link
-      href={href}
-      className="flex items-center gap-3 px-4 py-3 rounded-xl text-muted-foreground hover:text-white hover:bg-white/5 transition-all duration-200 group"
-    >
-      <span className="group-hover:scale-110 transition-transform duration-200">{icon}</span>
-      <span className="font-medium">{label}</span>
-    </Link>
   );
 }

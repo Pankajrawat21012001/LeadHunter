@@ -14,7 +14,7 @@ export const runtime = 'nodejs';
 export async function POST(req: NextRequest) {
     ensureDataDir();
     const searchParams: SearchRequest = await req.json();
-    const { targetDescription, useCase, needs, targetCount, senderContext } = searchParams;
+    const { targetDescription, useCase, needs, targetCount, senderContext, previousQuery } = searchParams;
 
     const encoder = new TextEncoder();
     const stream = new ReadableStream({
@@ -25,6 +25,7 @@ export async function POST(req: NextRequest) {
 
             try {
                 // Step 1: Understand + Generate Boolean Search (Groq)
+                const startTime = Date.now();
                 sendEvent({ step: 1, status: "running", message: "Understanding who you need..." });
                 
                 const booleanPrompt = `
@@ -32,6 +33,7 @@ You are an expert at finding people on LinkedIn via Google search.
 
 User wants to find: "${targetDescription}"
 Use case: ${useCase}
+${previousQuery ? `IMPORTANT: The previous search used this query: "${previousQuery}". Generate a DIFFERENT variation that will find NEW people not found before. Change the job titles, add different keywords, or restructure the boolean logic.` : ""}
 
 Generate a Google Boolean search string to find LinkedIn profiles of these people.
 
@@ -183,6 +185,8 @@ Extract and return ONLY this JSON (no explanation, no markdown):
 
                 appendContacts(contactsToSave);
 
+                const runTimeSeconds = Math.round((Date.now() - startTime) / 1000);
+                
                 const campaign: Campaign = {
                   id: campaignId,
                   name: `Search: ${targetDescription}`,
@@ -192,12 +196,14 @@ Extract and return ONLY this JSON (no explanation, no markdown):
                   totalFound: contactsToSave.length,
                   emailsFound,
                   status: "completed",
-                  createdAt: new Date().toISOString(),
-                  completedAt: new Date().toISOString()
+                  createdAt: new Date(startTime).toISOString(),
+                  completedAt: new Date().toISOString(),
+                  deduplicatedCount: removedCount || 0,
+                  runTimeSeconds
                 };
 
                 saveCampaign(campaign);
-                sendEvent({ step: 7, status: "done", message: "Saved to CSV" });
+                sendEvent({ step: 7, status: "done", message: `Saved to CSV in ${runTimeSeconds}s` });
 
                 sendEvent({ 
                     step: 0, 

@@ -19,6 +19,7 @@ import {
     Mail, 
     Linkedin as LinkedinIcon,
     User,
+    Users,
     Edit2,
     CheckCircle2,
     XCircle,
@@ -60,21 +61,50 @@ export default function CampaignTable({ contacts: initialContacts }: { contacts:
     setTempMessage(content);
   };
 
-  const saveEdit = (id: string, type: 'li' | 'ce') => {
+  const saveEdit = async (id: string, type: 'li' | 'ce') => {
+    let finalValue = tempMessage;
+    
     setContacts(prev => prev.map(c => {
       if (c.id === id) {
         if (type === 'li') return { ...c, linkedinMessage: tempMessage };
         if (type === 'ce') {
            const parsed = JSON.parse(c.coldEmail || '{}');
            parsed.body = tempMessage;
-           return { ...c, coldEmail: JSON.stringify(parsed) };
+           const stringified = JSON.stringify(parsed);
+           finalValue = stringified;
+           return { ...c, coldEmail: stringified };
         }
       }
       return c;
     }));
+
+    try {
+        await fetch('/api/contacts', {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                id, 
+                field: type === 'li' ? 'linkedinMessage' : 'coldEmail',
+                value: finalValue 
+            })
+        });
+        toast.success("Message saved permanently");
+    } catch (e) {
+        toast.error("Failed to save to server");
+    }
+    
     setEditingId(null);
-    toast.success("Message updated locally");
   };
+
+  if (contacts.length === 0) {
+    return (
+      <div className="bg-surface rounded-2xl border border-dashed border-white/10 p-24 text-center">
+        <Users className="w-12 h-12 text-muted-foreground/10 mx-auto mb-4" />
+        <h3 className="text-xl font-heading text-muted-foreground/40 italic tracking-tighter">No contacts found in this view</h3>
+        <p className="text-sm text-muted-foreground/30 mt-2 font-mono uppercase tracking-widest">Gravity has not pulled any results yet.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-surface rounded-2xl border border-white/5 overflow-hidden shadow-2xl">
@@ -207,8 +237,8 @@ export default function CampaignTable({ contacts: initialContacts }: { contacts:
                            </div>
                            <p className="text-[10px] uppercase font-bold text-muted-foreground flex justify-between">
                              <span>Limit: 300 Chars</span>
-                             <span className={contact.linkedinMessage.length > 300 ? 'text-error' : ''}>
-                               {contact.linkedinMessage.length}/300
+                             <span className={(contact.linkedinMessage?.length || 0) > 300 ? 'text-error' : ''}>
+                               {contact.linkedinMessage?.length || 0}/300
                              </span>
                            </p>
                         </div>

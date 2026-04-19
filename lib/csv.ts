@@ -48,6 +48,14 @@ export const updateContactStatus = (id: string, status: string): void => {
     fs.writeFileSync(CONTACTS_FILE, Papa.unparse(updated));
 };
 
+// Update contact field (generic)
+export const updateContact = (id: string, field: string, value: any): void => {
+    ensureDataDir();
+    const contacts = readContacts();
+    const updated = contacts.map(c => c.id === id ? { ...c, [field]: value } : c);
+    fs.writeFileSync(CONTACTS_FILE, Papa.unparse(updated));
+};
+
 // Read all campaigns
 export const readCampaigns = (): Campaign[] => {
     ensureDataDir();
