@@ -1,16 +1,27 @@
 import Papa from 'papaparse';
 import fs from 'fs';
 import path from 'path';
+import os from 'os';
 import { Contact, Campaign } from './types';
 
-const DATA_DIR = path.join(process.cwd(), 'data');
+// In serverless environments like Vercel, the filesystem is read-only 
+// except for the /tmp directory.
+const IS_VERCEL = process.env.VERCEL === '1' || !!process.env.NEXT_PUBLIC_VERCEL_URL;
+const DATA_DIR = IS_VERCEL 
+    ? path.join(os.tmpdir(), 'leadhunter-data')
+    : path.join(process.cwd(), 'data');
+
 const CONTACTS_FILE = path.join(DATA_DIR, 'contacts.csv');
 const CAMPAIGNS_FILE = path.join(DATA_DIR, 'campaigns.csv');
 
 // Ensure /data directory exists
 export const ensureDataDir = () => {
     if (!fs.existsSync(DATA_DIR)) {
-        fs.mkdirSync(DATA_DIR, { recursive: true });
+        try {
+            fs.mkdirSync(DATA_DIR, { recursive: true });
+        } catch (e) {
+            console.error('Failed to create data directory:', e);
+        }
     }
 };
 
