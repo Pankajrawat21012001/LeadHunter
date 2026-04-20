@@ -74,7 +74,16 @@ export const readCampaigns = (): Campaign[] => {
 // Save many campaigns (overwrite)
 export const overwriteCampaigns = (campaigns: Campaign[]): void => {
     ensureDataDir();
-    const csv = Papa.unparse(campaigns);
+    // Explicitly define columns to ensure new fields like filtersJson are captured 
+    // even if the first object in the array is an old record missing that field.
+    const csv = Papa.unparse({
+        fields: [
+            "id", "name", "useCase", "targetDescription", "booleanQuery", 
+            "filtersJson", "totalFound", "emailsFound", "status", 
+            "createdAt", "completedAt", "deduplicatedCount", "runTimeSeconds"
+        ],
+        data: campaigns
+    });
     fs.writeFileSync(CAMPAIGNS_FILE, csv);
 };
 

@@ -24,6 +24,7 @@ export interface Campaign {
   useCase: UseCase;
   targetDescription: string;
   booleanQuery: string;
+  filtersJson: string;       // JSON-serialized SearchFilters for Find More
   totalFound: number;
   emailsFound: number;
   status: "running" | "completed" | "failed";
@@ -33,8 +34,19 @@ export interface Campaign {
   runTimeSeconds: number;
 }
 
+export interface SearchFilters {
+  roles: string[];          // job titles
+  industries: string[];     // industry sectors
+  locations: string[];      // countries / cities
+  companyStage: string;     // startup | enterprise | mid-size | any
+  companySize: string | null;
+  signals: string[];        // intent keywords
+  seniority: string;        // C-level | Director | Manager | IC | any
+}
+
 export interface SearchRequest {
-  targetDescription: string;
+  targetDescription: string;   // kept for naming the campaign
+  filters: SearchFilters;      // structured filters — skips AI extraction
   useCase: UseCase;
   needs: {
     linkedinUrl: boolean;

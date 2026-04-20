@@ -54,10 +54,11 @@ export default async function CampaignPage({ params }: { params: Promise<{ id: s
             )}
           </div>
 
-          <CampaignActions 
-            campaignId={campaign.id} 
-            targetDescription={campaign.targetDescription} 
-            useCase={campaign.useCase} 
+          <CampaignActions
+            campaignId={campaign.id}
+            targetDescription={campaign.targetDescription}
+            useCase={campaign.useCase}
+            filtersJson={campaign.filtersJson}
           />
         </div>
       </div>
