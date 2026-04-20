@@ -32,16 +32,21 @@ export default function CampaignActions({ campaignId, targetDescription, useCase
   };
 
   return (
-    <div className="flex gap-4">
+    <div className="flex gap-3 items-center">
       <Link href={`/api/export?campaignId=${campaignId}`}>
-        <Button variant="outline" className="h-12 px-6 rounded-xl bg-surface border-white/5 gap-2 hover:bg-white/5 font-bold uppercase tracking-widest text-[10px]">
-          <Download className="w-4 h-4" />
+        <Button 
+          variant="outline" 
+          className="h-10 px-5 rounded-xl bg-white border-purple-200 text-foreground hover:bg-purple-50 hover:border-primary/30 gap-2 font-semibold text-xs transition-all shadow-sm"
+        >
+          <Download className="w-4 h-4 text-primary" />
           Export CSV
         </Button>
       </Link>
       
       <Link href={`/?q=${encodeURIComponent(targetDescription)}&useCase=${useCase}&prev=${encodeURIComponent(campaignId)}`}>
-        <Button className="h-12 px-6 rounded-xl gap-2 accent-glow font-bold uppercase tracking-widest text-[10px]">
+        <Button 
+          className="h-10 px-5 rounded-xl gap-2 font-semibold text-xs accent-glow bg-primary hover:bg-primary/90 text-white shadow-sm transition-all"
+        >
           <RefreshCcw className="w-4 h-4" />
           Find More
         </Button>
@@ -49,7 +54,7 @@ export default function CampaignActions({ campaignId, targetDescription, useCase
       
       <Button 
           variant="ghost" 
-          className="h-12 px-4 rounded-xl text-error hover:bg-error/10 gap-2 border border-transparent hover:border-error/20 transition-all font-bold uppercase tracking-widest text-[10px]"
+          className="h-10 px-4 rounded-xl text-red-500 hover:bg-red-50 hover:text-red-600 gap-2 border border-transparent hover:border-red-200 transition-all font-semibold text-xs"
           onClick={handleDelete}
       >
         <Trash2 className="w-4 h-4" />

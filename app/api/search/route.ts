@@ -28,44 +28,96 @@ export async function POST(req: NextRequest) {
                 const startTime = Date.now();
                 sendEvent({ step: 1, status: "running", message: "Understanding who you need..." });
                 
+                const filterExtractionPrompt = `
+Extract structured search filters from this description: "${targetDescription}"
+
+Return ONLY this JSON with no explanation:
+{
+  "roles": ["list of job titles mentioned or implied"],
+  "industries": ["list of industries or sectors"],
+  "locations": ["list of countries or cities"],
+  "companyStage": "startup or enterprise or mid-size or any",
+  "companySize": "employee range if mentioned or null",
+  "signals": ["extra intent keywords like fundraising, hiring, scaling"],
+  "seniority": "C-level or Director or Manager or IC or any"
+}
+
+Rules:
+- Never invent filters not present in the description
+- If something is not mentioned, use null
+- For roles, always include common synonyms (e.g. "CEO" → also add "Founder", "Co-Founder")
+`;
+
+                const filters = await callGroq(filterExtractionPrompt, true, 'llama-3.3-70b-versatile');
+                sendEvent({ step: 1, status: "running", message: "Parsed filters from your description...", data: { filters } });
+
                 const booleanPrompt = `
-You are an expert at finding people on LinkedIn via Google search.
+You are an expert at finding LinkedIn profiles via Google search.
 
-User wants to find: "${targetDescription}"
-Use case: ${useCase}
-${previousQuery ? `IMPORTANT: The previous search used this query: "${previousQuery}". Generate a DIFFERENT variation that will find NEW people not found before. Change the job titles, add different keywords, or restructure the boolean logic.` : ""}
+Target profile:
+- Roles: ${filters.roles?.join(' OR ') || 'any'}
+- Industries: ${filters.industries?.join(', ') || 'any'}
+- Locations: ${filters.locations?.join(' OR ') || 'any'}
+- Company stage: ${filters.companyStage || 'any'}
+- Company size: ${filters.companySize || 'any'}
+- Signals/keywords: ${filters.signals?.join(', ') || 'none'}
+- Seniority: ${filters.seniority || 'any'}
 
-Generate a Google Boolean search string to find LinkedIn profiles of these people.
+${previousQuery ? `IMPORTANT: Previous query was: "${previousQuery}". Generate a DIFFERENT variation to find NEW people. Change job title synonyms, restructure logic.` : ""}
+
+Generate a Google Boolean search string to find LinkedIn profiles.
 
 Rules:
 - MUST start with: site:linkedin.com/in
-- Use OR for multiple job titles
-- Use quotes for exact phrases
-- Exclude job postings: add -job -jobs -hiring -"job description"
-- IMPORTANT: If possible, try to find profiles that might have emails in their snippets. You can add "( "email" OR "@gmail.com" OR "@outlook.com" OR "contact" )" if it helps find profiles with contact info in the public snippet.
-- Keep it under 250 characters
-- Make it specific enough to find real individual profiles
+- Use OR between all role/title variants in parentheses
+- MUST include location terms if provided
+- MUST include industry/niche keywords if provided
+- Include signal keywords if they help filter intent
+- Exclude: -job -jobs -hiring -"job description"
+- Under 250 characters
+- Target real individual profiles, not company pages
 
-Return ONLY the search string. Nothing else. No explanation.
+Return ONLY the search string. Nothing else.
 `;
-                const booleanQuery = await callGroq(booleanPrompt);
+                const booleanQuery = await callGroq(booleanPrompt, false, 'llama-3.3-70b-versatile');
                 sendEvent({ step: 1, status: "done", message: "Generated search query", data: { booleanQuery } });
 
                 // Step 2: Search Google (Serper.dev)
-                sendEvent({ step: 2, status: "running", message: "Searching the internet..." });
+                sendEvent({ step: 2, status: "running", message: "Generating search variations..." });
+
+                // Generate a second query variation
+                const booleanPrompt2 = booleanPrompt + `\nThis must be a DIFFERENT variation from the first. Use different synonyms for job titles, reorder terms, or use different industry keywords to find different profiles.`;
+                const booleanQuery2 = await callGroq(booleanPrompt2, false, 'llama-3.3-70b-versatile');
+
+                sendEvent({ step: 2, status: "running", message: "Searching with multiple queries..." });
+
                 let allResults: any[] = [];
                 let pageCount = 1;
-                while (allResults.length < targetCount && pageCount <= 5) {
-                  const results = await serperSearch(booleanQuery, pageCount);
-                  const filtered = results.filter((r: any) => r.link && r.link.includes('linkedin.com/in/'));
-                  allResults = [...allResults, ...filtered];
+
+                while (allResults.length < targetCount && pageCount <= 4) {
+                  const [results1, results2] = await Promise.all([
+                    serperSearch(booleanQuery, pageCount),
+                    serperSearch(booleanQuery2, pageCount),
+                  ]);
+
+                  const combined = [...results1, ...results2];
+                  const seen = new Set<string>();
+                  const deduped = combined.filter((r: any) => {
+                    if (!r.link || !r.link.includes('linkedin.com/in/') || seen.has(r.link)) return false;
+                    seen.add(r.link);
+                    return true;
+                  });
+
+                  allResults = [...allResults, ...deduped];
                   sendEvent({ step: 2, status: "running", message: `Found ${allResults.length} profiles...`, data: { count: allResults.length } });
-                  if (results.length < 10) break;
+
+                  if (results1.length < 10 && results2.length < 10) break;
                   pageCount++;
                   await delay(200);
                 }
+
                 const limitedResults = allResults.slice(0, targetCount);
-                sendEvent({ step: 2, status: "done", message: `Found ${limitedResults.length} LinkedIn profiles`, data: { count: limitedResults.length } });
+                sendEvent({ step: 2, status: "done", message: `Found ${limitedResults.length} LinkedIn profiles across ${pageCount} pages`, data: { count: limitedResults.length, queries: [booleanQuery, booleanQuery2] } });
 
                 // Step 3: Extract contact details (Groq)
                 sendEvent({ step: 3, status: "running", message: "Extracting contact details..." });
@@ -83,12 +135,12 @@ URL: "${result.link}"
 
 Extract and return ONLY this JSON (no explanation, no markdown):
 {
-  "fullName": "First Last or null",
-  "jobTitle": "their job title or null",
-  "company": "company name or null",
-  "companyDomain": "best guess domain like company.com or null",
-  "linkedinUrl": "the full LinkedIn URL",
-  "email": "any email address found in snippet/title or null"
+  "fullName": "Full name of the person (required)",
+  "jobTitle": "Job title or role (e.g. CEO, Founder)",
+  "company": "Full company name (not just 'null')",
+  "companyDomain": "The most likely website domain for this company (e.g. apple.com). Guess based on company name if not explicitly present.",
+  "linkedinUrl": "The full LinkedIn URL provided",
+  "email": "Any email address explicitly mentioned (check for [at] or [dot] variations) or null"
 }
 `;
                     try {
@@ -102,7 +154,7 @@ Extract and return ONLY this JSON (no explanation, no markdown):
                   const results = await Promise.all(batchPromises);
                   extractedContacts.push(...results.filter(Boolean));
                   sendEvent({ step: 3, status: "running", message: `Extracted ${extractedContacts.length} contacts...` });
-                  await delay(200);
+                  await delay(500); // Increased delay
                 }
                 sendEvent({ step: 3, status: "done", message: `Extracted ${extractedContacts.length} contacts` });
 
@@ -113,35 +165,89 @@ Extract and return ONLY this JSON (no explanation, no markdown):
                 const removedCount = extractedContacts.length - newContactsRaw.length;
                 sendEvent({ step: 4, status: "done", message: `Removed ${removedCount} duplicates. Processing ${newContactsRaw.length} new people.`, data: { newCount: newContactsRaw.length } });
 
-                // Step 5: Process extracted emails (Replaces Skrapp)
-                let emailsFound = 0;
-                newContactsRaw.forEach(c => {
-                  if (c.email && c.email !== 'null') {
-                    emailsFound++;
-                    c.emailStatus = "found";
-                  } else {
-                    c.email = "";
-                    c.emailStatus = "not_found";
-                  }
-                });
+                // Step 5: Email Discovery (Deep Search)
+                if (needs.email && newContactsRaw.length > 0) {
+                    sendEvent({ step: 5, status: "running", message: "Searching for missing emails..." });
+                    
+                    const emailBatchSize = 3;
+                    for (let i = 0; i < newContactsRaw.length; i += emailBatchSize) {
+                        const batch = newContactsRaw.slice(i, i + emailBatchSize);
+                        const discoveryPromises = batch.map(async (contact: any) => {
+                            if (contact.email && contact.email !== 'null' && contact.email.includes('@')) {
+                                contact.emailStatus = "found";
+                                return;
+                            }
+
+                            // Strategy: Two targeted searches for the best chance of finding the email
+                            // 1. LinkedIn profile + "email" keyword (often extracts from snippet even if not on page)
+                            // 2. Name + Company + Domain search
+                            const domain = contact.companyDomain || contact.company.replace(/\s+/g, '').toLowerCase() + '.com';
+                            const discoveryQueries = [
+                                `site:linkedin.com/in/${contact.linkedinUrl.split('/in/')[1]?.split('/')[0]} "email"`,
+                                `"${contact.fullName}" "${contact.company}" email OR "@${domain}"`
+                            ];
+
+                            try {
+                                for (const query of discoveryQueries) {
+                                    const discoveryResults = await serperSearch(query, 1);
+                                    if (discoveryResults.length > 0) {
+                                        const snippets = discoveryResults.map((r: any) => `${r.title}: ${r.snippet}`).join('\n\n');
+                                        const findEmailPrompt = `
+Extract the professional email address for ${contact.fullName} from these search results.
+Focus on patterns like name@company.com or emails mentioned in bio/snippets.
+
+Search Results:
+${snippets}
+
+Return ONLY the email address or "null". No explanation.
+`;
+                                        const foundEmail = await callGroq(findEmailPrompt);
+                                        const cleanEmail = foundEmail?.toLowerCase()?.trim()?.replace(/["']/g, '');
+                                        
+                                        if (cleanEmail && cleanEmail.includes('@') && cleanEmail.includes('.') && !cleanEmail.includes(' ')) {
+                                            contact.email = cleanEmail;
+                                            contact.emailStatus = "found";
+                                            break; // Found it, stop searching
+                                        }
+                                    }
+                                    await delay(300); // Be gentle between discovery queries
+                                }
+                                
+                                if (!contact.email) {
+                                    contact.email = "";
+                                    contact.emailStatus = "not_found";
+                                }
+                            } catch (e) {
+                                console.error(`Discovery failed for ${contact.fullName}:`, e);
+                            }
+                        });
+
+                        await Promise.all(discoveryPromises);
+                        sendEvent({ step: 5, status: "running", message: `Checked ${Math.min(i + emailBatchSize, newContactsRaw.length)} contacts for emails...` });
+                        await delay(600);
+                    }
+                }
+
+                let emailsFound = newContactsRaw.filter(c => c.emailStatus === "found").length;
                 const campaignId = `camp_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
-                sendEvent({ step: 5, status: "done", message: `Found ${emailsFound} emails in search results` });
+                sendEvent({ step: 5, status: "done", message: `Found ${emailsFound} emails total` });
 
                 // Step 6: Generate Messages (Groq)
-                if ((needs.linkedinMessage || (needs.coldEmail && emailsFound > 0)) && newContactsRaw.length > 0) {
+                if ((needs.linkedinMessage || needs.coldEmail) && newContactsRaw.length > 0) {
                   sendEvent({ step: 6, status: "running", message: "Writing personalized messages..." });
-                  for (let i = 0; i < newContactsRaw.length; i += 3) {
-                    const batch = newContactsRaw.slice(i, i + 3);
+                  const batchSize = 2; // Smaller batch size for message generation
+                  for (let i = 0; i < newContactsRaw.length; i += batchSize) {
+                    const batch = newContactsRaw.slice(i, i + batchSize);
                     const batchPromises = batch.map(async (contact: any) => {
                       const msgPromises: Promise<any>[] = [];
                       if (needs.linkedinMessage) {
-                        msgPromises.push(callGroq(getLinkedinPrompt(targetDescription, contact, senderContext)));
+                        msgPromises.push(callGroq(getLinkedinPrompt(targetDescription, contact, senderContext, filters)));
                       } else {
                         msgPromises.push(Promise.resolve(""));
                       }
 
-                      if (needs.coldEmail && contact.email) {
-                        msgPromises.push(callGroq(getColdEmailPrompt(targetDescription, useCase, contact, senderContext), true));
+                      if (needs.coldEmail) {
+                        msgPromises.push(callGroq(getColdEmailPrompt(targetDescription, useCase, contact, senderContext, filters), true));
                       } else {
                         msgPromises.push(Promise.resolve(null));
                       }
@@ -151,8 +257,8 @@ Extract and return ONLY this JSON (no explanation, no markdown):
                       contact.coldEmail = ceMsg ? JSON.stringify(ceMsg) : "";
                     });
                     await Promise.all(batchPromises);
-                    sendEvent({ step: 6, status: "running", message: `Wrote messages for ${Math.min(i + 3, newContactsRaw.length)} people...` });
-                    await delay(300);
+                    sendEvent({ step: 6, status: "running", message: `Wrote messages for ${Math.min(i + batchSize, newContactsRaw.length)} people...` });
+                    await delay(800); // Increased delay between batches
                   }
                   sendEvent({ step: 6, status: "done", message: "Messages written" });
                 } else {

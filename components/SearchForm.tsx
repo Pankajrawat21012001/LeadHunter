@@ -70,7 +70,7 @@ export default function SearchForm({ existingCount }: { existingCount: number })
         linkedinUrl: true,
         email: true,
         linkedinMessage: true,
-        coldEmail: false,
+        coldEmail: true,
       },
       targetCount: 10,
       senderContext: "",
@@ -159,48 +159,48 @@ export default function SearchForm({ existingCount }: { existingCount: number })
   const targetCount = form.watch("targetCount");
 
   return (
-    <div className="space-y-12 pb-20">
+    <div className="space-y-10 pb-20">
       <AnimatePresence mode="wait">
         {!isSearching ? (
           <motion.div 
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95 }}
-            className="space-y-12"
+            exit={{ opacity: 0, scale: 0.97 }}
+            className="space-y-10"
           >
             {/* Header */}
-            <div className="text-center space-y-4">
-              <h1 className="text-5xl font-heading tracking-tight">Who are you looking for?</h1>
-              <p className="text-xl text-muted-foreground max-w-2xl mx-auto font-sans">
+            <div className="text-center space-y-3">
+              <h1 className="text-5xl font-heading tracking-tight text-foreground">Who are you looking for?</h1>
+              <p className="text-lg text-muted-foreground max-w-xl mx-auto">
                 Describe your ideal outreach targets and let AI handle the heavy lifting.
               </p>
             </div>
 
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-12 max-w-3xl mx-auto">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-10 max-w-3xl mx-auto">
               {/* Target Description */}
               <div className="relative group">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-6 h-6 text-muted-foreground group-focus-within:text-primary transition-colors" />
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
                 <Input
                   {...form.register("targetDescription")}
                   placeholder='e.g. "HR managers at startups in India"'
-                  className="h-16 pl-14 text-xl bg-surface border-white/5 rounded-2xl focus:ring-primary focus:border-primary transition-all duration-300 shadow-2xl"
+                  className="h-15 pl-12 text-lg bg-white border-purple-200 rounded-2xl focus:ring-primary focus:border-primary transition-all shadow-sm text-foreground placeholder:text-muted-foreground/60"
                 />
                 {form.formState.errors.targetDescription && (
-                  <p className="text-error text-sm mt-2">{form.formState.errors.targetDescription.message}</p>
+                  <p className="text-red-500 text-sm mt-2">{form.formState.errors.targetDescription.message}</p>
                 )}
               </div>
 
               {/* Use Case Cards */}
-              <div className="space-y-6">
-                <label className="text-sm font-bold uppercase tracking-widest text-muted-foreground block text-center">
+              <div className="space-y-4">
+                <label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground block text-center">
                   What is your goal?
                 </label>
-                <div className="grid grid-cols-3 gap-6">
+                <div className="grid grid-cols-3 gap-4">
                   <UseCaseCard
                     id="job"
                     selected={useCase === "job"}
                     onClick={() => form.setValue("useCase", "job")}
-                    icon={<Briefcase className="w-6 h-6" />}
+                    icon={<Briefcase className="w-5 h-5" />}
                     title="Get a Job"
                     description="Find hiring managers & recruiters"
                   />
@@ -208,7 +208,7 @@ export default function SearchForm({ existingCount }: { existingCount: number })
                     id="customer"
                     selected={useCase === "customer"}
                     onClick={() => form.setValue("useCase", "customer")}
-                    icon={<Target className="w-6 h-6" />}
+                    icon={<Target className="w-5 h-5" />}
                     title="Sell a Product"
                     description="Find potential customers & decision makers"
                   />
@@ -216,37 +216,37 @@ export default function SearchForm({ existingCount }: { existingCount: number })
                     id="connection"
                     selected={useCase === "connection"}
                     onClick={() => form.setValue("useCase", "connection")}
-                    icon={<Link2 className="w-6 h-6" />}
+                    icon={<Link2 className="w-5 h-5" />}
                     title="Networking"
                     description="Expand your professional circle"
                   />
                 </div>
               </div>
 
-              {/* Sender Context (New) */}
-              <div className="space-y-4">
-                <label className="text-sm font-bold uppercase tracking-widest text-muted-foreground block text-center">
+              {/* Sender Context */}
+              <div className="space-y-3">
+                <label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground block text-center">
                   About You (Optional)
                 </label>
-                <div className="relative group max-w-2xl mx-auto">
+                <div className="relative max-w-2xl mx-auto">
                     <textarea
                     {...form.register("senderContext")}
                     placeholder='e.g. "I am a product designer with 5 years at B2B SaaS startups"'
-                    className="w-full h-32 bg-surface border border-white/5 rounded-2xl p-6 text-sm resize-none focus:ring-1 ring-primary focus:border-primary transition-all shadow-xl font-sans"
+                    className="w-full h-28 bg-white border border-purple-200 rounded-2xl p-5 text-sm resize-none focus:ring-1 ring-primary focus:border-primary transition-all shadow-sm text-foreground placeholder:text-muted-foreground/60"
                     />
-                    <p className="text-[10px] uppercase font-bold text-muted-foreground mt-3 tracking-widest text-center opacity-60">
+                    <p className="text-[10px] uppercase font-semibold text-muted-foreground mt-2 tracking-widest text-center">
                         This detail helps Groq write hyper-personalized messages.
                     </p>
                 </div>
               </div>
 
               {/* Checkboxes & Count */}
-              <div className="grid grid-cols-2 gap-12">
-                <div className="space-y-6">
-                  <label className="text-sm font-bold uppercase tracking-widest text-muted-foreground block">
+              <div className="grid grid-cols-2 gap-10">
+                <div className="space-y-4">
+                  <label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground block">
                     What do you need?
                   </label>
-                  <div className="grid gap-4">
+                  <div className="grid gap-3">
                     <NeedsCheckbox label="LinkedIn Profile" checked={form.watch("needs.linkedinUrl")} onChange={(v: boolean) => form.setValue("needs.linkedinUrl", v)} icon={<Link2 className="w-4 h-4" />} />
                     <NeedsCheckbox label="Email Address" checked={form.watch("needs.email")} onChange={(v: boolean) => form.setValue("needs.email", v)} icon={<Mail className="w-4 h-4" />} />
                     <NeedsCheckbox label="LinkedIn Message" checked={form.watch("needs.linkedinMessage")} onChange={(v: boolean) => form.setValue("needs.linkedinMessage", v)} icon={<MessageSquare className="w-4 h-4" />} />
@@ -254,15 +254,15 @@ export default function SearchForm({ existingCount }: { existingCount: number })
                   </div>
                 </div>
 
-                <div className="space-y-6">
-                  <label className="text-sm font-bold uppercase tracking-widest text-muted-foreground block">
+                <div className="space-y-4">
+                  <label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground block">
                     How many people?
                   </label>
                   <div className="space-y-4">
                     <div className="flex justify-between items-end">
                       <span className="text-5xl font-heading text-primary">{targetCount}</span>
                       <div className="text-right">
-                        <p className="text-xs text-muted-foreground uppercase font-bold">New People</p>
+                        <p className="text-xs text-muted-foreground uppercase font-semibold">New People</p>
                         <p className="text-xs text-muted-foreground mt-1">
                           You have {existingCount} in your list
                         </p>
@@ -274,7 +274,7 @@ export default function SearchForm({ existingCount }: { existingCount: number })
                       max="50" 
                       value={targetCount}
                       onChange={(e) => form.setValue("targetCount", parseInt(e.target.value))}
-                      className="w-full h-2 bg-secondary rounded-lg appearance-none cursor-pointer accent-primary"
+                      className="w-full h-2 bg-purple-100 rounded-lg appearance-none cursor-pointer accent-primary"
                     />
                   </div>
                 </div>
@@ -283,59 +283,59 @@ export default function SearchForm({ existingCount }: { existingCount: number })
               <Button 
                 type="submit" 
                 size="lg" 
-                className="w-full h-16 text-xl rounded-2xl accent-glow group mt-8"
+                className="w-full h-14 text-base rounded-2xl accent-glow group mt-6 bg-primary hover:bg-primary/90 text-white font-semibold shadow-lg"
               >
-                <Zap className="w-6 h-6 mr-3 fill-white group-hover:scale-110 transition-transform" />
+                <Zap className="w-5 h-5 mr-2 fill-white group-hover:scale-110 transition-transform" />
                 Find People
-                <ArrowRight className="w-6 h-6 ml-auto opacity-50 group-hover:translate-x-1 transition-transform" />
+                <ArrowRight className="w-5 h-5 ml-auto opacity-60 group-hover:translate-x-1 transition-transform" />
               </Button>
             </form>
           </motion.div>
         ) : (
           <motion.div 
-            initial={{ opacity: 0, scale: 0.9 }}
+            initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="max-w-xl mx-auto space-y-12"
+            className="max-w-xl mx-auto space-y-10"
           >
-            <div className="text-center space-y-4">
-              <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-8 relative">
-                <Zap className="w-10 h-10 text-primary fill-primary animate-pulse" />
+            <div className="text-center space-y-3">
+              <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6 relative">
+                <Zap className="w-9 h-9 text-primary fill-primary animate-pulse" />
                 <div className="absolute inset-0 rounded-full border-4 border-primary/20 border-t-primary animate-spin" />
               </div>
-              <h2 className="text-4xl font-heading">Finding your people...</h2>
-              <p className="text-muted-foreground">This normally takes 1-2 minutes depending on quantity</p>
+              <h2 className="text-3xl font-heading text-foreground">Finding your people...</h2>
+              <p className="text-muted-foreground text-sm">This normally takes 1–2 minutes depending on quantity</p>
             </div>
 
-            <div className="space-y-8 bg-surface p-8 rounded-3xl border border-white/5 shadow-2xl">
-              <Progress value={progress} className="h-3" />
+            <div className="space-y-6 bg-white p-8 rounded-3xl border border-purple-100 shadow-md">
+              <Progress value={progress} className="h-2.5" />
               
-              <div className="space-y-6">
+              <div className="space-y-5">
                 {STEPS.map((step) => {
                   const state = stepStates[step.id];
                   return (
                     <div key={step.id} className="flex items-center gap-4">
                       <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-all duration-500 ${
-                        state?.status === 'done' ? 'bg-success/20 text-success' : 
+                        state?.status === 'done' ? 'bg-emerald-100 text-emerald-600' : 
                         currentStep === step.id ? 'bg-primary text-white scale-110 shadow-lg shadow-primary/20' : 
-                        'bg-secondary/50 text-muted-foreground'
+                        'bg-purple-50 text-muted-foreground'
                       }`}>
-                        {state?.status === 'done' ? <Check className="w-5 h-5" /> : 
+                        {state?.status === 'done' ? <Check className="w-4 h-4" /> : 
                          currentStep === step.id ? <div className="w-2 h-2 bg-white rounded-full animate-ping" /> : 
                          <span className="text-xs font-bold">{step.id}</span>}
                       </div>
                       <div className="flex-1">
-                        <p className={`font-bold transition-colors ${currentStep === step.id ? 'text-white' : 'text-muted-foreground'}`}>
+                        <p className={`font-semibold text-sm transition-colors ${currentStep === step.id ? 'text-foreground' : 'text-muted-foreground'}`}>
                           {step.label}
                         </p>
                         {step.id === 2 && currentStep === 2 && state?.data?.count && (
-                          <span className="ml-auto font-mono text-[10px] bg-primary/20 text-primary px-2 py-0.5 rounded-full animate-pulse border border-primary/20">
+                          <span className="inline-block mt-0.5 font-mono text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded-full border border-primary/20">
                             {state.data.count} found
                           </span>
                         )}
                       </div>
                       <div className="flex-1">
                         {state && state.message && (
-                          <p className="text-xs text-muted-foreground mt-0.5 animate-in slide-in-from-left-2 fade-in">{state.message}</p>
+                          <p className="text-xs text-muted-foreground animate-in slide-in-from-left-2 fade-in">{state.message}</p>
                         )}
                       </div>
                     </div>
@@ -346,7 +346,7 @@ export default function SearchForm({ existingCount }: { existingCount: number })
 
             <Button 
                 variant="ghost" 
-                className="w-full text-muted-foreground hover:text-error"
+                className="w-full text-muted-foreground hover:text-red-500 hover:bg-red-50"
                 onClick={() => setIsSearching(false)}
             >
               Cancel Search
@@ -362,18 +362,20 @@ function UseCaseCard({ id, selected, onClick, icon, title, description }: any) {
   return (
     <Card 
       onClick={onClick}
-      className={`p-6 cursor-pointer transition-all duration-300 border-white/5 relative overflow-hidden group hover:scale-[1.02] active:scale-[0.98] ${
-        selected ? 'bg-primary/10 border-primary ring-2 ring-primary/20' : 'bg-surface hover:bg-white/5'
+      className={`p-5 cursor-pointer transition-all duration-200 relative overflow-hidden group hover:scale-[1.02] active:scale-[0.98] shadow-sm ${
+        selected 
+          ? 'bg-primary/8 border-primary/40 ring-2 ring-primary/20 shadow-primary/10' 
+          : 'bg-white border-purple-100 hover:border-purple-300 hover:bg-purple-50/50'
       }`}
     >
-      <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-4 transition-colors ${selected ? 'bg-primary text-white' : 'bg-secondary text-muted-foreground'}`}>
+      <div className={`w-10 h-10 rounded-xl flex items-center justify-center mb-3 transition-colors ${selected ? 'bg-primary text-white shadow-sm shadow-primary/30' : 'bg-purple-50 text-primary'}`}>
         {icon}
       </div>
-      <h3 className="font-bold text-lg mb-1">{title}</h3>
-      <p className="text-sm text-muted-foreground leading-snug">{description}</p>
+      <h3 className={`font-semibold text-base mb-1 ${selected ? 'text-primary' : 'text-foreground'}`}>{title}</h3>
+      <p className="text-xs text-muted-foreground leading-snug">{description}</p>
       {selected && (
-        <div className="absolute top-2 right-2 bg-primary rounded-full p-1">
-          <Check className="w-3 h-3 text-white" />
+        <div className="absolute top-2 right-2 bg-primary rounded-full p-1 shadow-sm">
+          <Check className="w-2.5 h-2.5 text-white" />
         </div>
       )}
     </Card>
@@ -384,18 +386,21 @@ function UseCaseCard({ id, selected, onClick, icon, title, description }: any) {
 function NeedsCheckbox({ label, checked, onChange, icon }: any) {
   return (
     <div 
-      className={`flex items-center gap-3 p-4 rounded-xl border cursor-pointer transition-all duration-200 ${
-        checked ? 'bg-primary/5 border-primary/50 text-white' : 'bg-surface border-white/5 text-muted-foreground hover:bg-white/5'
+      className={`flex items-center gap-3 p-3.5 rounded-xl border cursor-pointer transition-all duration-200 ${
+        checked 
+          ? 'bg-primary/8 border-primary/30 text-primary' 
+          : 'bg-white border-purple-100 text-muted-foreground hover:border-purple-300 hover:bg-purple-50/50'
       }`}
       onClick={() => onChange(!checked)}
     >
       <Checkbox
         checked={checked}
-        onCheckedChange={onChange}
+        onCheckedChange={(v) => onChange(v)}
         className="data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+        onClick={(e) => e.stopPropagation()}
       />
-      <span className="text-sm flex-1 font-medium">{label}</span>
-      <div className="opacity-50">{icon}</div>
+      <span className={`text-sm flex-1 font-medium ${checked ? 'text-primary' : 'text-foreground'}`}>{label}</span>
+      <div className={`${checked ? 'text-primary' : 'text-muted-foreground/50'}`}>{icon}</div>
     </div>
   );
 }

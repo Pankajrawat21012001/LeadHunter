@@ -9,11 +9,11 @@ import {
     LayoutDashboard,
     Briefcase,
     Target,
-    Link2
+    Link2,
+    TrendingUp
 } from "lucide-react";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 
 export default function HistoryPage() {
   const campaigns = readCampaigns().sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
@@ -27,79 +27,83 @@ export default function HistoryPage() {
   };
 
   return (
-    <div className="py-12 space-y-12">
+    <div className="py-10 space-y-10">
       {/* Header */}
-      <div className="flex justify-between items-end">
-        <div className="space-y-4">
-          <Link href="/" className="inline-flex items-center text-sm font-bold text-muted-foreground hover:text-white transition-colors uppercase tracking-widest gap-2">
-            <LayoutDashboard className="w-4 h-4" />
+      <div className="flex justify-between items-start">
+        <div className="space-y-3">
+          <Link href="/" className="inline-flex items-center text-xs font-semibold text-muted-foreground hover:text-primary transition-colors uppercase tracking-widest gap-1.5 group">
+            <LayoutDashboard className="w-3.5 h-3.5" />
             Go to Search
           </Link>
-          <h1 className="text-5xl font-heading tracking-tight">Campaign History</h1>
-          <p className="text-muted-foreground font-medium">Tracking your outreach results since Jan 2026</p>
+          <h1 className="text-4xl font-heading tracking-tight text-foreground">Campaign History</h1>
+          <p className="text-muted-foreground text-sm">Tracking your outreach results since Jan 2026</p>
         </div>
       </div>
 
-      {/* Stats Summary Table */}
-      <div className="grid grid-cols-4 gap-6">
-        <StatsTile label="Total Campaigns" value={stats.totalCampaigns.toString()} />
-        <StatsTile label="People Found" value={stats.totalPeople.toString()} />
-        <StatsTile label="Unique Profiles" value={stats.uniquePeople.toString()} />
-        <StatsTile label="Email Find Rate" value={`${stats.successRate}%`} />
+      {/* Stats Summary */}
+      <div className="grid grid-cols-4 gap-5">
+        <StatsTile label="Total Campaigns" value={stats.totalCampaigns.toString()} color="purple" />
+        <StatsTile label="People Found" value={stats.totalPeople.toString()} color="blue" />
+        <StatsTile label="Unique Profiles" value={stats.uniquePeople.toString()} color="green" />
+        <StatsTile label="Email Find Rate" value={`${stats.successRate}%`} color="amber" />
       </div>
 
-      {/* Chart Section */}
+      {/* Chart */}
       <HistoryChart campaigns={campaigns} />
 
       {/* Campaign List */}
-      <div className="space-y-6">
+      <div className="space-y-5">
         <div className="flex items-center gap-3">
-            <HistoryIcon className="w-6 h-6 text-primary" />
-            <h2 className="text-2xl font-heading">Recent Activity</h2>
+            <div className="p-2 bg-primary/10 rounded-lg">
+              <HistoryIcon className="w-4 h-4 text-primary" />
+            </div>
+            <h2 className="text-xl font-heading text-foreground">Recent Activity</h2>
         </div>
 
-        <div className="grid gap-4">
+        <div className="grid gap-3">
           {campaigns.length > 0 ? campaigns.map((campaign) => (
             <Link key={campaign.id} href={`/campaign/${campaign.id}`} className="group">
-              <div className="p-6 bg-surface hover:bg-white/5 border border-white/5 rounded-2xl flex items-center justify-between transition-all duration-300 group-hover:scale-[1.01] shadow-xl">
-                 <div className="flex items-center gap-6">
-                    <div className={`p-4 rounded-xl ${
-                        campaign.useCase === 'job' ? 'bg-[#6366f1]/10 text-[#6366f1]' : 
-                        campaign.useCase === 'customer' ? 'bg-[#10b981]/10 text-[#10b981]' : 
-                        'bg-[#f59e0b]/10 text-[#f59e0b]'
+              <div className="p-5 bg-white hover:bg-purple-50/50 border border-purple-100 hover:border-primary/30 rounded-2xl flex items-center justify-between transition-all duration-200 shadow-sm hover:shadow-md hover:shadow-primary/8 group-hover:scale-[1.005]">
+                 <div className="flex items-center gap-5">
+                    <div className={`p-3.5 rounded-xl ${
+                        campaign.useCase === 'job' ? 'bg-purple-50 text-primary' : 
+                        campaign.useCase === 'customer' ? 'bg-emerald-50 text-emerald-600' : 
+                        'bg-amber-50 text-amber-600'
                     }`}>
-                        {campaign.useCase === 'job' ? <Briefcase className="w-6 h-6" /> : 
-                         campaign.useCase === 'customer' ? <Target className="w-6 h-6" /> : 
-                         <Link2 className="w-6 h-6" />}
+                        {campaign.useCase === 'job' ? <Briefcase className="w-5 h-5" /> : 
+                         campaign.useCase === 'customer' ? <Target className="w-5 h-5" /> : 
+                         <Link2 className="w-5 h-5" />}
                     </div>
                     <div>
-                        <h4 className="font-bold text-lg mb-1 group-hover:text-primary transition-colors">{campaign.name}</h4>
-                        <div className="flex gap-4 text-xs font-bold text-muted-foreground uppercase tracking-widest">
+                        <h4 className="font-semibold text-foreground mb-1.5 group-hover:text-primary transition-colors">{campaign.name}</h4>
+                        <div className="flex gap-4 text-xs font-medium text-muted-foreground">
                            <span className="flex items-center gap-1"><Calendar className="w-3 h-3" /> {new Date(campaign.createdAt).toLocaleDateString()}</span>
                            <span className="flex items-center gap-1"><Users className="w-3 h-3" /> {campaign.totalFound} Found</span>
-                           {campaign.emailsFound > 0 && <span className="flex items-center gap-1 text-success"><Mail className="w-3 h-3" /> {campaign.emailsFound} Emails</span>}
+                           {campaign.emailsFound > 0 && <span className="flex items-center gap-1 text-emerald-600"><Mail className="w-3 h-3" /> {campaign.emailsFound} Emails</span>}
                         </div>
                     </div>
                  </div>
 
-                 <div className="flex items-center gap-8">
+                 <div className="flex items-center gap-6">
                     <div className="text-right">
-                        <p className="text-[10px] uppercase font-bold text-muted-foreground mb-1 tracking-widest">Status</p>
-                        <Badge variant="outline" className={`font-bold border-white/5 bg-secondary px-3 py-1 ${
-                            campaign.status === 'completed' ? 'text-success' : 'text-warning'
+                        <p className="text-[10px] uppercase font-semibold text-muted-foreground mb-1 tracking-widest">Status</p>
+                        <Badge className={`font-semibold px-3 py-1 text-xs ${
+                            campaign.status === 'completed' 
+                              ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' 
+                              : 'bg-amber-50 text-amber-700 border border-amber-200'
                         }`}>
                             {campaign.status}
                         </Badge>
                     </div>
-                    <ChevronRight className="w-6 h-6 text-muted-foreground group-hover:translate-x-1 group-hover:text-white transition-all" />
+                    <ChevronRight className="w-5 h-5 text-muted-foreground group-hover:translate-x-0.5 group-hover:text-primary transition-all" />
                  </div>
               </div>
             </Link>
           )) : (
-            <div className="p-12 bg-surface/50 border border-dashed border-white/10 rounded-2xl text-center flex flex-col items-center">
-              <HistoryIcon className="w-12 h-12 text-muted-foreground/30 mb-4" />
-              <p className="text-muted-foreground">No campaigns found. Start your first search now!</p>
-              <Link href="/" className="mt-4 text-primary font-bold hover:underline">Launch New Search</Link>
+            <div className="p-16 bg-white border border-dashed border-purple-200 rounded-2xl text-center flex flex-col items-center shadow-sm">
+              <HistoryIcon className="w-12 h-12 text-purple-200 mb-4" />
+              <p className="text-muted-foreground mb-4">No campaigns found. Start your first search now!</p>
+              <Link href="/" className="text-primary font-semibold hover:underline text-sm">Launch New Search →</Link>
             </div>
           )}
         </div>
@@ -108,11 +112,15 @@ export default function HistoryPage() {
   );
 }
 
-function StatsTile({ label, value }: { label: string; value: string }) {
+function StatsTile({ label, value, color }: { label: string; value: string; color: 'purple' | 'blue' | 'green' | 'amber' }) {
   return (
-    <div className="bg-secondary/30 p-6 rounded-2xl border border-white/5 text-center">
-        <p className="text-[10px] uppercase font-bold text-muted-foreground tracking-widest mb-2 opacity-60">{label}</p>
-        <p className="text-3xl font-heading text-white">{value}</p>
+    <div className="bg-white p-6 rounded-2xl border border-purple-100 shadow-sm text-center card-lift">
+        <p className="text-[10px] uppercase font-semibold text-muted-foreground tracking-widest mb-2">{label}</p>
+        <p className={`text-3xl font-heading ${
+          color === 'purple' ? 'text-primary' :
+          color === 'blue' ? 'text-sky-600' :
+          color === 'green' ? 'text-emerald-600' : 'text-amber-600'
+        }`}>{value}</p>
     </div>
   );
 }
