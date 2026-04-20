@@ -393,10 +393,10 @@ export default function SearchForm({ existingCount }: { existingCount: number })
                                 <div className="space-y-3">
                                     <FieldLabel icon={<Check className="w-3.5 h-3.5" />} label="What do you need?" />
                                     <div className="grid gap-2.5">
-                                        <NeedsCheckbox label="LinkedIn Profile URL" checked={needs.linkedinUrl} onChange={v => setNeeds(p => ({ ...p, linkedinUrl: v }))} icon={<Link2 className="w-4 h-4" />} />
-                                        <NeedsCheckbox label="Email Address" checked={needs.email} onChange={v => setNeeds(p => ({ ...p, email: v }))} icon={<Mail className="w-4 h-4" />} />
-                                        <NeedsCheckbox label="LinkedIn Message" checked={needs.linkedinMessage} onChange={v => setNeeds(p => ({ ...p, linkedinMessage: v }))} icon={<MessageSquare className="w-4 h-4" />} />
-                                        <NeedsCheckbox label="Cold Email" checked={needs.coldEmail} onChange={v => setNeeds(p => ({ ...p, coldEmail: v }))} icon={<Mail className="w-4 h-4" />} />
+                                        <NeedsCheckbox label="LinkedIn Profile URL" checked={needs.linkedinUrl} onChange={(v: boolean) => setNeeds(p => ({ ...p, linkedinUrl: v }))} icon={<Link2 className="w-4 h-4" />} />
+                                        <NeedsCheckbox label="Email Address" checked={needs.email} onChange={(v: boolean) => setNeeds(p => ({ ...p, email: v }))} icon={<Mail className="w-4 h-4" />} />
+                                        <NeedsCheckbox label="LinkedIn Message" checked={needs.linkedinMessage} onChange={(v: boolean) => setNeeds(p => ({ ...p, linkedinMessage: v }))} icon={<MessageSquare className="w-4 h-4" />} />
+                                        <NeedsCheckbox label="Cold Email" checked={needs.coldEmail} onChange={(v: boolean) => setNeeds(p => ({ ...p, coldEmail: v }))} icon={<Mail className="w-4 h-4" />} />
                                     </div>
                                 </div>
 
@@ -486,7 +486,7 @@ export default function SearchForm({ existingCount }: { existingCount: number })
     );
 }
 
-function UseCaseCard({ id, selected, onClick, icon, title, description }: any) {
+function UseCaseCard({ id, selected, onClick, icon, title, description }: { id: string; selected: boolean; onClick: () => void; icon: React.ReactNode; title: string; description: string }) {
     return (
         <Card
             onClick={onClick}
@@ -510,7 +510,7 @@ function UseCaseCard({ id, selected, onClick, icon, title, description }: any) {
     );
 }
 
-function NeedsCheckbox({ label, checked, onChange, icon }: any) {
+function NeedsCheckbox({ label, checked, onChange, icon }: { label: string; checked: boolean; onChange: (v: boolean) => void; icon: React.ReactNode }) {
     return (
         <div
             className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all duration-200 ${
@@ -522,7 +522,7 @@ function NeedsCheckbox({ label, checked, onChange, icon }: any) {
         >
             <Checkbox
                 checked={checked}
-                onCheckedChange={v => onChange(v)}
+                onCheckedChange={(v: boolean) => onChange(v)}
                 className="data-[state=checked]:bg-primary data-[state=checked]:border-primary"
                 onClick={e => e.stopPropagation()}
             />
